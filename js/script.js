@@ -1,40 +1,30 @@
 var canvas = document.getElementById('canvas'),
-ctx = canvas.getContext('2d'),
-width = 200,
-height = 200,
-count = 10,
-speed = 500,
-length = 5,
-snake_array = [],
-ev;
+    ctx = canvas.getContext('2d'),
+    width = 200,
+    height = 200,
+    count = 10,
+    speed = 200,
+    length = 1,
+    snake_array = [],
+    food=[],
+    fps=30,
+    speedRequestId,
+    ev;
+
+canvas.width = width;
+canvas.height = height;
+canvas.style.border = '1px solid black';
 
 function init(){
-    canvas.width = width;
-    canvas.height = height;
-    canvas.style.border = '1px solid black';
     ev = 'right';
-
-    snikers();
-    food();
-
-    var requestAnimationFrame = window.mozRequestAnimationFrame||
-                                window.msRequestAnimationFrame||
-                                window.webkitRequestAnimationFrame;
-
-    requestAnimationFrame(loop);
-
-
-
-
-
+    createSnake();
+    createFood();
+    loop();
 };
 
 function loop() {
-
     var nx = snake_array[0].x;
     var ny = snake_array[0].y;
-
-    // console.log(nx, ny);
 
     var keys={
         '37' : 'left',
@@ -47,68 +37,90 @@ function loop() {
         ev = keys[key];
     }, false);
 
-    if(ev == 'right') nx+=10;
-    else if(ev == 'left') nx=nx-10;
-    else if(ev == 'up') ny=ny-10;
-    else if(ev == 'down') ny+=10;
+    if(ev == 'right') nx++;
+    else if(ev == 'left') nx--;
+    else if(ev == 'up') ny--;
+    else if(ev == 'down') ny++;
 
+    clearSnake();
 
-    ctx.fillRect(snake_array[0].x,snake_array[0].y,count,count);
-    ctx.clearRect(snake_array[snake_array.length-1].x,snake_array[snake_array.length-1].y,count,count);
-
-
-
-    // //Move snake
     var tail = snake_array.pop();
     tail.x = nx;
     tail.y = ny;
     snake_array.unshift(tail);
 
-
-    if ((food.x == snake_array[0].x)&&(food.y == snake_array[0].y)){
-        console.log('omnomnom');
-        snake_array.push(food.x,food.y);
+    for (var i=1; i < snake_array.length; i++){
+        if((snake_array[i].x == snake_array[0].x)&&(snake_array[i].y == snake_array[0].y)){
+            gameOver();
+            return false;
+        }
+    }
+    if ((food.x/count == snake_array[0].x)&&(food.y/count == snake_array[0].y)){
+        snake_array.push(food);
+        createFood();
+    }
+    if ((snake_array[0].x > width/count) || (snake_array[0].y > height/count) || (snake_array[0].y < 0)|| (snake_array[0].x <0)){
+        gameOver();
+        return false;
     }
 
-    if ((snake_array[0].x == width) || (snake_array[0].y == height)){
-        console.log('game over');
-    }
+    update();
 
-    setTimeout(loop, 200);
-
-
+    speedRequestId = setTimeout(function() {
+        loop();
+    }, speed);
+    speedRequestId;
 }
 
 function draw(x,y){
+    ctx.fillStyle = 'black';
     ctx.fillRect(x*count, y*count, count, count);
 };
 
 
-function food(){
+function createFood(){
     ctx.fillStyle = 'green';
-    var food={
-        x : Math.floor(Math.random()*(width - count)),
-        y : Math.floor(Math.random()*(height - count))
+    food={
+        x : Math.floor(Math.floor((Math.random()*(width - count+1)+ count))/count)*count,
+        y : Math.floor(Math.floor((Math.random()*(height - count+1) + count))/count)*count
     };
-    ctx.fillRect(food.x, food.y, 10, 10);
+    ctx.fillRect(food.x, food.y, count, count);
 };
 
-function snikers(){
+function createSnake(){
     for (var i=0; i<length; i++){
         snake_array.push({x:i,y:0});
         draw(snake_array[i].x,snake_array[i].y);
     }
 };
 
-function update() {
-    for(var i = 0; i < snake_array.length; i++) {
-        ctx.clearRect(snake_array[i].x,snake_array[i].y,10,10);
+function clearSnake(){
+    for (var i=0; i < snake_array.length; i++){
+        ctx.clearRect(snake_array[i].x*count,snake_array[i].y*count, count, count);
     }
-    for(var i = 0; i < snake_array.length; i++) {
+};
 
-        var s = snake_array[i];
-        draw(s.x, s.y);
+function update() {
+    ctx.fillStyle = 'black';
+    for (var i=0; i < snake_array.length; i++){
+        draw(snake_array[i].x,snake_array[i].y);
     }
+}
+
+function gameOver(){
+    snake_array = [];
+    ctx.clearRect(0,0, width, height);
+    clearInterval(speedRequestId);
+    ctx.strokeStyle = "black";
+    ctx.font = "bold 20pt Arial";
+    ctx.textAlign = 'center';
+    ctx.fillText("Game Over", width/2, height/2);
+    ctx.font = "10pt Arial";
+    ctx.fillText("Click on canvas", width/2, height-10);
+    canvas.addEventListener('click', function(e){
+        ctx.clearRect(0,0, width, height);
+        init();
+    }, false)
 }
 
 init();
