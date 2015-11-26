@@ -9,17 +9,29 @@ var canvas = document.getElementById('canvas'),
     food=[],
     fps=30,
     speedRequestId,
+    requestId,
     ev;
 
 canvas.width = width;
 canvas.height = height;
 canvas.style.border = '1px solid black';
 
+var requestAnimationFrame = window.webkitRequestAnimationFrame ||
+                            window.mozRequestAnimationFrame ||
+                            window.oRequestAnimationFrame ||
+                            window.msRequestAnimationFrame ||
+                            window.requestAnimationFrame;
+var cancelRequestAnimationFrame  = window.cancelRequestAnimationFrame ||
+                            window.webkitCancelRequestAnimationFrame ||
+                            window.mozCancelRequestAnimationFrame ||
+                            window.oCancelRequestAnimationFrame ||
+                            window.msCancelRequestAnimationFrame;
+
 function init(){
     ev = 'right';
     createSnake();
     createFood();
-    loop();
+    requestId = requestAnimationFrame(loop);
 };
 
 function loop() {
@@ -67,7 +79,7 @@ function loop() {
     update();
 
     speedRequestId = setTimeout(function() {
-        loop();
+        requestId = requestAnimationFrame(loop);
     }, speed);
     speedRequestId;
 }
@@ -108,19 +120,26 @@ function update() {
 }
 
 function gameOver(){
-    snake_array = [];
     ctx.clearRect(0,0, width, height);
     clearInterval(speedRequestId);
+    cancelRequestAnimationFrame(requestId);
     ctx.strokeStyle = "black";
     ctx.font = "bold 20pt Arial";
     ctx.textAlign = 'center';
     ctx.fillText("Game Over", width/2, height/2);
     ctx.font = "10pt Arial";
     ctx.fillText("Click on canvas", width/2, height-10);
-    canvas.addEventListener('click', function(e){
+    canvas.setAttribute("class", "over");
+    var over = document.getElementsByClassName('over');
+    over[0].addEventListener('click', function listener(e){
+        console.log('play');
+        e.preventDefault();
+        this.removeAttribute('class');
         ctx.clearRect(0,0, width, height);
+        snake_array = [];
         init();
-    }, false)
+        this.removeEventListener('click', listener, false);
+    }, false);
 }
 
 init();
