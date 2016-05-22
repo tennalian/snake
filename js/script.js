@@ -50,7 +50,7 @@ function loop() {
     else if(ev == 'up') ny--;// строка
     else if(ev == 'down') ny++;
 
-    //ctx.clearRect(snake_array[0].x,snake_array[0].y,10,10);
+    ctx.clearRect(snake_array[0].x,snake_array[0].y,10,10);
     ctx.fillRect(snake_array[snake_array.length-1].x,snake_array[snake_array.length-1].y,10,10);
 
     //Move snake
